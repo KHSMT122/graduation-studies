@@ -247,15 +247,12 @@ for epoch in range(epochs):
 '''
 model.load_state_dict(torch.load("./model/model.pth"))
 
-
-print(model)
-
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from pytorch_grad_cam import GradCAM,EigenCAM
 model.eval()
 
-atk = FGSM(model,eps=4/255)
+atk = FGSM(model,eps=0/255)
 atk.set_normalization_used(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
 
@@ -273,44 +270,85 @@ set_transforms = transforms.Compose([
 ])
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True,transform=set_transforms)
-trainset_data = DataLoader(trainset,batch_size=1,shuffle=True)
-for i in range(10):
+trainset_data = DataLoader(trainset,batch_size=1,shuffle=False)
+for i in range(2):
+    '''
     set_iter = iter(trainset_data)
-    
-
     img, label = set_iter.next()
+    
+    input_img = input_transform(img)
+    
+    img = img.to(device)
+    label = label.to(device)
+    '''
+    
+    img,label = trainset[i]
+
     img = img.to(device) 
+    label = torch.tensor([label],dtype=torch.int64)
+    
     label = label.to(device)
 
+    img = atk(img,label)
+    
+    '''
+    img = img.unsqueeze_(0)
+    label = torch.tensor(label)
+    label = label.unsqueeze_(0)
+    '''
     input_img = input_transform(img)
-    img = img_transform(img)
-    img = torch.squeeze(img)
-    input_img = input_img.to(device)
-    input_img = atk(input_img,label)
+    rgb_img = img_transform(img)
+    
     
     target_layers = [model.layer3[-1],model.layer4[-1],model.layer2[-1],model.layer1[-1]]
-    #target_layers = [model.backbone[-3]]
     cam = GradCAM(
         model=model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
     )
-    print("***************************************************")
-    print(img.shape)
+   
+    input_img = input_img.squeeze(0)
+    
     grayscale_cam = cam(
-        input_tensor=input_img,
+        input_tensor=input_img.unsqueeze(0),
         #targets=[ClassifierOutputTarget(label)],
         targets=None
     )
-    img.detach().cpu().numpy()
-    grayscale_cam.detach().cpu().numpy()
     
     grayscale_cam = grayscale_cam[0, :]
-    visualization = show_cam_on_image(img.permute(1, 2, 0).numpy(), grayscale_cam, use_rgb=True)
-    fig, ax = plt.subplots(1,2)
-    ax[0].imshow(img.permute(1, 2, 0).numpy())
-    ax[1].imshow(visualization)
+    
+    '''
+   img.detach().cpu().numpy()
+    grayscale_cam.detach().cpu().numpy()
+    '''
+    
+    
+    
+    rgb_img = torch.squeeze(rgb_img)  # <torch.Size([3, 32, 32])>
+   
+    
+    #####visualizationi
+    
+    grayscale_cam = np.array(grayscale_cam,dtype=np.float32)
+    #grayscale_cam = np.ndarray(grayscale_cam)
+    
+    print("*******************show******************************")
+    grayscale_cam = torch.from_numpy(grayscale_cam)
+    print(rgb_img.dtype)
+    
+    print(grayscale_cam.dtype)
+    print("*******************show******************************")
 
+    
+    visualization = show_cam_on_image(rgb_img.permute(1,2,0), grayscale_cam, use_rgb=True)
+    
+    '''
+        #visualization = show_cam_on_image(input_img.permute(1, 2, 0), grayscale_cam, use_rgb=True)
+        fig, ax = plt.subplots(1,2)    
+        ax[0].imshow(img.permute(1, 2, 0).numpy())
+        ax[1].imshow(visualization)
 
+    '''
+    
     imshow(torchvision.utils.make_grid(img),str(i))
     visualization=cv2.cvtColor(visualization,cv2.COLOR_BGR2RGB)
     cv2.imwrite('./result/cifar10_gcam'+str(i)+dt_now_str+'.jpg',visualization)
-    print(visualization)
+    

@@ -133,40 +133,7 @@ class AverageMeter(object):
         fmtstr = "{name} {val" + self.fmt + "} ({avg" + self.fmt + "})"
         return fmtstr.format(**self.__dict__)
 
-'''
-class ClassifierModel(torch.nn.Module):
-    def __init__(self):
-        super(ClassifierModel, self).__init__()
 
-        # 畳み込み層
-        self.backbone = torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels=3, out_channels=128,
-                      kernel_size=3, stride=2, padding=1),
-            torch.nn.ReLU(True),
-            torch.nn.BatchNorm2d(128),
-            torch.nn.Conv2d(in_channels=128, out_channels=32,
-                      kernel_size=3, stride=2, padding=1),
-            torch.nn.ReLU(True),
-            torch.nn.BatchNorm2d(32),
-            torch.nn.Conv2d(in_channels=32, out_channels=16,
-                      kernel_size=3, stride=2, padding=1),
-            torch.nn.BatchNorm2d(16),
-            torch.nn.Flatten()
-        )
-        # 全結合層
-        self.mlp_layers = torch.nn.Sequential(
-            torch.nn.Linear(256, 50),
-            torch.nn.ReLU(True),
-            torch.nn.Linear(50, 10),
-            torch.nn.Softmax(dim=1),
-        )
-
-    def forward(self, x):
-        x = self.backbone(x)
-        y = self.mlp_layers(x)
-        return y
-
-'''
 # 学習など
 model = models.resnet50(pretrained = True)
 model.fc = nn.Linear(in_features=2048, out_features=10, bias=True)
@@ -183,7 +150,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 scheduler = torch.optim.lr_scheduler.StepLR(
     optimizer, step_size=30, gamma=0.1
 )
-'''
+'''#TRAIN&SAVE MODEL
 min_loss = np.inf
 for epoch in range(epochs):
     model.train()
@@ -237,8 +204,6 @@ for epoch in range(epochs):
 model.load_state_dict(torch.load("./model/model.pth"))
 
 
-print(model)
-
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from pytorch_grad_cam import GradCAM,EigenCAM
@@ -261,26 +226,30 @@ for i in range(2):
     img, label = trainset[i]
     input_img = input_transform(img)     #<torch.float32>
     img = img_transform(img)                #<torch.float32>
-    print(label)
 
     target_layers = [model.layer3[-1],model.layer4[-1],model.layer2[-1],model.layer1[-1]]
-    #target_layers = [model.backbone[-3]]
-    cam = EigenCAM(
+    cam = GradCAM(
         model=model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
     )
+    
     grayscale_cam = cam(
         input_tensor=input_img.unsqueeze(0),
         #targets=[ClassifierOutputTarget(label)],
         targets=None
     )
+   
     grayscale_cam = grayscale_cam[0, :]
-    visualization = show_cam_on_image(img.permute(1, 2, 0).numpy(), grayscale_cam, use_rgb=True)
-    fig, ax = plt.subplots(1,2)
-    ax[0].imshow(img.permute(1, 2, 0).numpy())
-    ax[1].imshow(visualization)
+    
 
+    print("*********************show****************************")
+    print(img)
+    print(grayscale_cam)
+    print("*******************show******************************")
+
+
+    visualization = show_cam_on_image(img.permute(1, 2, 0).numpy(), grayscale_cam, use_rgb=True)
 
     imshow(torchvision.utils.make_grid(img),str(i))
     visualization=cv2.cvtColor(visualization,cv2.COLOR_BGR2RGB)
     cv2.imwrite('./result/cifar10_gcam'+str(i)+dt_now_str+'.jpg',visualization)
-    print(visualization)
+    
