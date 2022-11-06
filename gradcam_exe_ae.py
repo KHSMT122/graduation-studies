@@ -295,13 +295,14 @@ for i in range(2):
     #grayscale_cam = torch.from_numpy(grayscale_cam)
     print(rgb_img.dtype)
     
-    print(grayscale_cam.dtype)
+    print(grayscale_cam.shape)#<shape(32,32)>
     print("*******************show******************************")
-
+    rgb_img = rgb_img.to('cpu').detach().numpy().copy()
     
-    visualization = show_cam_on_image(rgb_img.permute(1,2,0), grayscale_cam, use_rgb=True)
-   
-    imshow(torchvision.utils.make_grid(img),str(i))
+    visualization = show_cam_on_image(rgb_img.transpose(1,2,0), grayscale_cam, use_rgb=True)
+    
+    print(visualization)
+    #imshow(torchvision.utils.make_grid(visualization),str(i))
     visualization=cv2.cvtColor(visualization,cv2.COLOR_BGR2RGB)
     cv2.imwrite('./result/cifar10_gcam'+str(i)+dt_now_str+'.jpg',visualization)
     

@@ -243,7 +243,7 @@ for i in range(2):
 
     print("*********************show****************************")
     print(img.dtype)
-    print(grayscale_cam.dtype)
+    print(grayscale_cam.shape)
     print("*******************show******************************")
 
 
