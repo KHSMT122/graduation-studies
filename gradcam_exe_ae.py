@@ -144,40 +144,7 @@ class AverageMeter(object):
         fmtstr = "{name} {val" + self.fmt + "} ({avg" + self.fmt + "})"
         return fmtstr.format(**self.__dict__)
 
-'''
-class ClassifierModel(torch.nn.Module):
-    def __init__(self):
-        super(ClassifierModel, self).__init__()
 
-        # 畳み込み層
-        self.backbone = torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels=3, out_channels=128,
-                      kernel_size=3, stride=2, padding=1),
-            torch.nn.ReLU(True),
-            torch.nn.BatchNorm2d(128),
-            torch.nn.Conv2d(in_channels=128, out_channels=32,
-                      kernel_size=3, stride=2, padding=1),
-            torch.nn.ReLU(True),
-            torch.nn.BatchNorm2d(32),
-            torch.nn.Conv2d(in_channels=32, out_channels=16,
-                      kernel_size=3, stride=2, padding=1),
-            torch.nn.BatchNorm2d(16),
-            torch.nn.Flatten()
-        )
-        # 全結合層
-        self.mlp_layers = torch.nn.Sequential(
-            torch.nn.Linear(256, 50),
-            torch.nn.ReLU(True),
-            torch.nn.Linear(50, 10),
-            torch.nn.Softmax(dim=1),
-        )
-
-    def forward(self, x):
-        x = self.backbone(x)
-        y = self.mlp_layers(x)
-        return y
-
-'''
 # 学習など
 model = models.resnet50(pretrained = True)
 model.fc = nn.Linear(in_features=2048, out_features=10, bias=True)
