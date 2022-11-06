@@ -242,8 +242,8 @@ for i in range(2):
     
 
     print("*********************show****************************")
-    print(img)
-    print(grayscale_cam)
+    print(img.dtype)
+    print(grayscale_cam.dtype)
     print("*******************show******************************")
 
 
