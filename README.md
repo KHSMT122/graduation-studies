@@ -1,7 +1,7 @@
 # pip list
-    * pip install grad-cam
-    * pip install opencv-python
-    * pip install torchattacks
+    *   pip install grad-cam
+    *   pip install opencv-python
+    *   pip install torchattacks
 
 # CONTENTS
 -   [gradcam_exe.py](https://github.com/KHSMT122/graduation-studies/blob/main/gradcam_exe.py)
