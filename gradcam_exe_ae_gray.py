@@ -220,7 +220,7 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 from pytorch_grad_cam import GradCAM,EigenCAM
 model.eval()
 
-atk = FGSM(model,eps=0/255)
+atk = FGSM(model,eps=16/255)
 atk.set_return_type(type='float')
 atk.set_normalization_used(mean=[0, 0, 0], std=[1, 1, 1])
 
@@ -286,7 +286,7 @@ for i in range(4):
     #grayscale_cam = torch.from_numpy(grayscale_cam)
     print(rgb_img.dtype)
     
-    print(grayscale_cam.shape)#<shape(32,32)>
+    print(grayscale_cam.dtype)#<shape(32,32)>
     print("*******************show/RGB******************************")
     rgb_img = rgb_img.to('cpu').detach().numpy().copy()
     
@@ -297,6 +297,9 @@ for i in range(4):
     cv2.imwrite('./result/cifar10_gcam_ae'+str(i)+dt_now_str+'.jpg',visualization)
     cv2.imwrite('./result/cifar10_gcam_ae_gray'+str(i)+dt_now_str+'.jpg',grayscale_cam*255)
 
-    rgb_img = rgb_img * grayscale_cam[np.newaxis,:,:]
-    cv2.imwrite('./result/cifar10_gcam_ae_mask'+str(i)+dt_now_str+'.jpg',rgb_img*255)
+    grayscale_cam = grayscale_cam/2 + 0.2
+    rgb_img = rgb_img * grayscale_cam *255
+    rgb_img = np.transpose(rgb_img,(1,2,0))
+    print("*****shape************",rgb_img.shape)
+    cv2.imwrite('./result/cifar10_gcam_ae_mask'+str(i)+dt_now_str+'.jpg',rgb_img)
     
