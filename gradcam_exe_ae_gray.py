@@ -213,7 +213,7 @@ for epoch in range(epochs):
     val_loss.reset()
 
 '''
-model.load_state_dict(torch.load("./model/11_07_16:01epochs200.pth"))
+model.load_state_dict(torch.load("./model/11_07_19:56epochs200.pth"))
 
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from pytorch_grad_cam.utils.image import show_cam_on_image
@@ -245,16 +245,6 @@ trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True
 trainset_data = DataLoader(trainset,batch_size=1,shuffle=False)
 for i in range(4):
     print(trainset[0])
-    '''
-    set_iter = iter(trainset_data)
-    img, label = set_iter.next()
-    
-    input_img = input_transform(img)
-    
-    img = img.to(device)
-    label = label.to(device)
-    '''
-    
     img,label = trainset[i]
 
     img = img.to(device) 
@@ -264,11 +254,6 @@ for i in range(4):
 
     img = atk(img,label)
     
-    '''
-    img = img.unsqueeze_(0)
-    label = torch.tensor(label)
-    label = label.unsqueeze_(0)
-    '''
     input_img = input_transform(img)
     rgb_img = img_transform(img)
     
@@ -305,16 +290,13 @@ for i in range(4):
     print("*******************show/RGB******************************")
     rgb_img = rgb_img.to('cpu').detach().numpy().copy()
     
-    
-    ################################################################################
-    
-    #rgb_img = 0.5*rgb_img+0.5
-
     visualization = show_cam_on_image(rgb_img.transpose(1,2,0), grayscale_cam, use_rgb=True)
     
-    print(visualization)
     #imshow(torchvision.utils.make_grid(visualization),str(i))
     visualization=cv2.cvtColor(visualization,cv2.COLOR_BGR2RGB)
     cv2.imwrite('./result/cifar10_gcam_ae'+str(i)+dt_now_str+'.jpg',visualization)
     cv2.imwrite('./result/cifar10_gcam_ae_gray'+str(i)+dt_now_str+'.jpg',grayscale_cam*255)
+
+    rgb_img = rgb_img * grayscale_cam[np.newaxis,:,:]
+    cv2.imwrite('./result/cifar10_gcam_ae_mask'+str(i)+dt_now_str+'.jpg',rgb_img*255)
     
