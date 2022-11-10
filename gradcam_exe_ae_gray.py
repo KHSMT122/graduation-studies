@@ -221,6 +221,7 @@ from pytorch_grad_cam import GradCAM,EigenCAM
 model.eval()
 
 atk = FGSM(model,eps=16/255)
+
 atk.set_return_type(type='float')
 atk.set_normalization_used(mean=[0, 0, 0], std=[1, 1, 1])
 
@@ -243,7 +244,7 @@ set_transforms = transforms.Compose([
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True,transform=set_transforms)
 trainset_data = DataLoader(trainset,batch_size=1,shuffle=False)
-for i in range(4):
+for i in range(10):
     print(trainset[0])
     img,label = trainset[i]
 
@@ -267,8 +268,8 @@ for i in range(4):
     
     grayscale_cam = cam(
         input_tensor=input_img.unsqueeze(0),
-        #targets=[ClassifierOutputTarget(label)],
-        targets=None
+        targets=[ClassifierOutputTarget(label)],
+        #targets=None
     )
     
     grayscale_cam = grayscale_cam[0, :]
@@ -297,7 +298,7 @@ for i in range(4):
     cv2.imwrite('./result/cifar10_gcam_ae'+str(i)+dt_now_str+'.jpg',visualization)
     cv2.imwrite('./result/cifar10_gcam_ae_gray'+str(i)+dt_now_str+'.jpg',grayscale_cam*255)
 
-    grayscale_cam = grayscale_cam/2 + 0.2
+    #grayscale_cam = grayscale_cam/2 + 0.2
     rgb_img = rgb_img * grayscale_cam *255
     rgb_img = np.transpose(rgb_img,(1,2,0))
     print("*****shape************",rgb_img.shape)

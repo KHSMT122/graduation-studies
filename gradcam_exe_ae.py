@@ -245,15 +245,6 @@ trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True
 trainset_data = DataLoader(trainset,batch_size=1,shuffle=False)
 for i in range(4):
     print(trainset[0])
-    '''
-    set_iter = iter(trainset_data)
-    img, label = set_iter.next()
-    
-    input_img = input_transform(img)
-    
-    img = img.to(device)
-    label = label.to(device)
-    '''
     
     img,label = trainset[i]
 
@@ -264,11 +255,6 @@ for i in range(4):
 
     img = atk(img,label)
     
-    '''
-    img = img.unsqueeze_(0)
-    label = torch.tensor(label)
-    label = label.unsqueeze_(0)
-    '''
     input_img = input_transform(img)
     rgb_img = img_transform(img)
     
@@ -292,7 +278,7 @@ for i in range(4):
     rgb_img = torch.squeeze(rgb_img)  # <torch.Size([3, 32, 32])>
    
     
-    #####visualizationi
+    #####visualization
     
     grayscale_cam = np.array(grayscale_cam,dtype=np.float32)
     #grayscale_cam = np.ndarray(grayscale_cam)
@@ -303,12 +289,7 @@ for i in range(4):
     
     print(grayscale_cam.shape)#<shape(32,32)>
     print("*******************show/RGB******************************")
-    rgb_img = rgb_img.to('cpu').detach().numpy().copy()
-    
-    
-    ################################################################################
-    
-    #rgb_img = 0.5*rgb_img+0.5
+    rgb_img = rgb_img.to('cpu').detach().numpy().copy()       
 
     visualization = show_cam_on_image(rgb_img.transpose(1,2,0), grayscale_cam, use_rgb=True)
     
