@@ -122,25 +122,30 @@ class grad_transforms_val():
 
         input_transform= transforms.Compose([
             transforms.Resize(32, interpolation=BICUBIC),
-            transforms.ToTensor(),
+            #transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         img_transform = transforms.Compose([
             transforms.Resize(32, interpolation=BICUBIC),
-            transforms.ToTensor(),
+            #transforms.ToTensor(),
         ])       
         '''set_transforms = transforms.Compose([
             transforms.ToTensor(),
         ])'''
         
         print("********************************************************",self.image)
-        image = torch.tensor(self.image,dtype=torch.float32)
+        self.image = np.array(self.image)
+        image = torch.tensor([self.image],dtype=torch.float32)
         image = image.to("cuda")
         label = torch.tensor([self.label],dtype=torch.int64)
-        label = self.label.to("cuda")
+        label = label.to("cuda")
 
-        image = atk(self.image,self.label)
+        print(image.shape)
+        image = image.permute(0,3,1,2)
+        image = image.squeeze()
+        image = atk(image,label)
 
+        print("******************atk ended*******************")
         input_img = input_transform(image)     #<torch.float32>
         rgb_img = img_transform(image)                #<torch.float32>
 

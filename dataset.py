@@ -19,9 +19,10 @@ class MyDataset_train():
         
         print("train_data_cifar10")
         for train_img,train_label in tqdm((self.train_data)):
-            print(train_img)
+            
             train_transform = grad_transforms_train(train_img,train_label,self.model_path,self.model_name)   
-            s_train_img,s_train_label = train_transform()            
+            s_train_img,s_train_label = train_transform()
+            #print(s_train_img*255)            
             self.rs_train_img.append(s_train_img)
             self.rs_train_label.append(s_train_label)
         return self.rs_train_img,self.rs_train_label   
@@ -51,6 +52,7 @@ class MyDataset_val():
             
             val_transform = grad_transforms_val(val_img,val_label,self.model_name,self.atk_name,self.model_path,self.eps,self.alpha,self.step)
             s_val_img,s_val_label = val_transform()
+            print(s_val_img)
             self.rs_val_img.append(s_val_img)
             self.rs_val_label.append(s_val_label)
         return self.rs_val_img,self.rs_val_label
