@@ -18,23 +18,17 @@ from pytorch_grad_cam import GradCAM,EigenCAM
 
 
 class grad_transforms_train():
-    def __init__(self,image,label,model_file,model_name):
-        self.model_path = model_file
+    def __init__(self,image,label,model):
         self.image = image
         self.label = label
-        self.model_name = model_name
+        self.model = model
         self.conut = 0
 
 
     def __call__(self):
-        if self.model_name == "resnet50":
-            
-            model = models.resnet50(pretrained = True)
-            model.fc = nn.Linear(in_features=2048, out_features=10, bias=True)
-            model.load_state_dict(torch.load("./model/"+self.model_path+".pth"))
+       
 
-
-        model.eval()
+        self.model.eval()
 
         input_transform= transforms.Compose([
             transforms.Resize(32, interpolation=BICUBIC),
@@ -51,9 +45,9 @@ class grad_transforms_train():
         input_img = input_transform(self.image)     #<torch.float32>
         rgb_img = img_transform(self.image)                #<torch.float32>
 
-        target_layers = [model.layer3[-1],model.layer4[-1],model.layer2[-1],model.layer1[-1]]
+        target_layers = [self.model.layer3[-1],self.model.layer4[-1],self.model.layer2[-1],self.model.layer1[-1]]
         cam = EigenCAM(
-            model=model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
+            model=self.model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
         )
         
         grayscale_cam = cam(
@@ -73,52 +67,40 @@ class grad_transforms_train():
     
 
 class grad_transforms_val():
-    def __init__(self,image,label,model_name,atk_name,model_file,eps,alpha,step):
+    def __init__(self,image,label,model,atk_name,eps,alpha,step):
         
-        self.model_file = model_file
         self.image = image
         self.label = label
         self.conut = 0
         self.atk_name = atk_name
-        self.model_name = model_name
         self.eps = eps
         self.alpha = alpha
         self.step = step
+        self.model = model
         
         #CW attack
         self.lr = 0.01
         self.kappa = 0
-        
-
 
     def __call__(self):
-        if self.model_name == "resnet50":
-            model = models.resnet50(pretrained = True)
-            model.fc = nn.Linear(in_features=2048, out_features=10, bias=True)
-            model.load_state_dict(torch.load("./model/"+self.model_file+".pth"))
-            print(self.model_name,"was loaded")
-
+        if self.atk_name == "PGD":
+            atk = PGD(self.model,eps=self.eps,alpha=self.alpha,step=self.step)
+            atk.set_return_type(type='float')
+            atk.set_normalization_used(mean=[0, 0, 0], std=[1, 1, 1])
             
 
-
-        if self.atk_name == "PGD":
-            atk = PGD(model,eps=self.eps,alpha=self.alpha,step=self.step)
-            atk.set_return_type(type='float')
-            atk.set_normalization_used(mean=[0, 0, 0], std=[1, 1, 1])
-            print("atack:",self.atk_name)
-
         elif self.atk_name == "FGSM":
-            atk = FGSM(model,eps=self.eps)
+            atk = FGSM(self.model,eps=self.eps)
             atk.set_return_type(type='float')
             atk.set_normalization_used(mean=[0, 0, 0], std=[1, 1, 1])
-            print("atack:",self.atk_name)
+            
         elif self.atk_name == "CW":
-            atk = CW(model,c=1,eps=self.eps,)
+            atk = CW(self.model,c=1,eps=self.eps,)
             atk.set_return_type(type='float')
             atk.set_normalization_used(mean=[0, 0, 0], std=[1, 1, 1])
-            print("atack:",self.atk_name)
+            
 
-        model.eval()
+        self.model.eval()
 
         input_transform= transforms.Compose([
             transforms.Resize(32, interpolation=BICUBIC),
@@ -133,25 +115,21 @@ class grad_transforms_val():
             transforms.ToTensor(),
         ])'''
         
-        print("********************************************************",self.image)
         self.image = np.array(self.image)
         image = torch.tensor([self.image],dtype=torch.float32)
         image = image.to("cuda")
         label = torch.tensor([self.label],dtype=torch.int64)
         label = label.to("cuda")
-
-        print(image.shape)
         image = image.permute(0,3,1,2)
         image = image.squeeze()
         image = atk(image,label)
 
-        print("******************atk ended*******************")
         input_img = input_transform(image)     #<torch.float32>
         rgb_img = img_transform(image)                #<torch.float32>
 
-        target_layers = [model.layer3[-1],model.layer4[-1],model.layer2[-1],model.layer1[-1]]
+        target_layers = [self.model.layer3[-1],self.model.layer4[-1],self.model.layer2[-1],self.model.layer1[-1]]
         cam = EigenCAM(
-            model=model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
+            model=self.model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
         )
         
         input_img = input_img.squeeze(0)

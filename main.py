@@ -38,6 +38,9 @@ dt_now_str = str(dt_now)
 dt_now=dt_now.strftime('/%m_%d_%H:%M')
 
 
+
+
+
 '''
 #data loaD  TRANSFORMS.PY DATASET.PY
 train_data = datasets.CIFAR10(root="./data", train=True, download=True, transform=train_transform("11_07_16:01epochs200","resnet"))
@@ -60,6 +63,8 @@ train_data_set = MyDataset_train(model_file,model_name)
 train_data = train_data_set()
 val_data_set = MyDataset_val(model_name,atk_name,model_file,eps,alpha,step)
 val_data = val_data_set()
+
+
 
 print("*********************",len(train_data))
 
