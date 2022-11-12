@@ -37,13 +37,21 @@ dt_now_str = str(dt_now)
 dt_now=dt_now.strftime('/%m_%d_%H:%M')
 
 #data aug
+###ADD  transform###################################################################
+transform_train = transforms.Compose([
+    transforms.RandomCrop(32, padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+])
+######################################################################################
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465),(0.2023, 0.1994, 0.2010))
 ])
 
 #data load
-train_data = datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
+train_data = datasets.CIFAR10(root="./data", train=True, download=True, transform=transform_train)
 val_data = datasets.CIFAR10(root="./data", train=False, download=True, transform=transform)
 train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
 validation_dataloader = DataLoader(val_data, batch_size=128, shuffle=False)
@@ -52,8 +60,11 @@ names = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", 
 
 
 #Resnet model
+
 model = models.resnet50(pretrained = True)
 model.fc = nn.Linear(in_features=2048, out_features=10, bias=True)
+
+
 model = model.to(device)
 
 
@@ -145,10 +156,12 @@ class accEarlyStopping:
         self.val_loss_min = val_loss  #その時のlossを記録する
 
 #optimizer & loss
-#optimizer = optim.SGD(model.parameters(), lr=0.1,momentum=0.9, weight_decay=5e-4)
-optimizer = optim.SGD(model.parameters(),lr=0.01,momentum=0.9,weight_decay=0.00005)
-#optimizer = optim.SGD(model.parameters(),lr=0.001,momentum=0.9,weight_decay=0.00005)
+optimizer = optim.SGD(model.parameters(), lr=0.1,momentum=0.9, weight_decay=5e-4)
+#BEST????????????optimizer = optim.SGD(model.parameters(),lr=0.01,momentum=0.9,weight_decay=0.00005)
+#lr = 0.001 is bad pram?
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
+
 
 criterion = nn.CrossEntropyLoss()
 '''
@@ -159,13 +172,13 @@ criterion = nn.CrossEntropyLoss()
 #running
 print("****************************************************")
 print(device)
-num_epochs = 200
+num_epochs = 1000
 losses = []
 accs = []
 val_losses = []
 val_accs = []
 
-earlystopping = accEarlyStopping(patience=50, verbose=True)
+earlystopping = accEarlyStopping(patience=100, verbose=True)
 
 
 for epoch in range(num_epochs):
