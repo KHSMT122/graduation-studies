@@ -59,21 +59,26 @@ alpha=2/255
 step=4
 
 #data load  TRANSFORMS.PY DATASET.PY
-train_data_set = MyDataset_train(model_file,model_name)
-train_data = train_data_set()
+
 val_data_set = MyDataset_val(model_name,atk_name,model_file,eps,alpha,step)
 val_data = val_data_set()
 
+val_num = int(len(val_data))*0.8
+test_num = int(len(val_data))*0.2
+validation_data,test_data = torch.utils.data.random_spliit(val_data,[val_num,test_num])
+
+train_data_set = MyDataset_train(model_file,model_name)
+train_data = train_data_set()
 
 
 print("*********************",len(train_data))
-
-
-train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
-validation_dataloader = DataLoader(val_data, batch_size=128, shuffle=False)
 val_num = int(len(val_data))*0.8
 test_num = int(len(val_data))*0.2
-val_dataloader,test_dataloader = torch.utils.data.random_spliit(val_data,[val_num,test_num])
+validation_data,test_data = torch.utils.data.random_split(val_data,[val_num,test_num])
+
+train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
+validation_dataloader = DataLoader(validation_data, batch_size=128, shuffle=False)
+test_dataloader = DataLoader(test_data, batch_size=128, shuffle=False)
 names = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck")
 
 model = models.resnet50(pretrained = True)
