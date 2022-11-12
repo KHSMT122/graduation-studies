@@ -65,7 +65,7 @@ val_data = val_data_set()
 
 val_num = int(len(val_data))*0.8
 test_num = int(len(val_data))*0.2
-validation_data,test_data = torch.utils.data.random_spliit(val_data,[val_num,test_num])
+validation_data,test_data = torch.utils.data.random_split(val_data,[val_num,test_num])
 
 train_data_set = MyDataset_train(model_file,model_name)
 train_data = train_data_set()
