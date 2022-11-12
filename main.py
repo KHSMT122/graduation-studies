@@ -70,12 +70,6 @@ validation_data,test_data = torch.utils.data.random_split(val_data,[val_num,test
 train_data_set = MyDataset_train(model_file,model_name)
 train_data = train_data_set()
 
-
-print("*********************",len(train_data))
-val_num = int(len(val_data))*0.8
-test_num = int(len(val_data))*0.2
-validation_data,test_data = torch.utils.data.random_split(val_data,[val_num,test_num])
-
 train_dataloader = DataLoader(train_data, batch_size=128, shuffle=True)
 validation_dataloader = DataLoader(validation_data, batch_size=128, shuffle=False)
 test_dataloader = DataLoader(test_data, batch_size=128, shuffle=False)
