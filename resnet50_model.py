@@ -120,11 +120,15 @@ names = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", 
 
 
 
-
+print('######################################')
+fx_model = models.resnet50(pretrained = True)
+print(fx_model)
 fx_model = Network()
 fx_model = fx_model.to("cuda")
 
-
+print("44444444444444444444444444444444444444444444444444444444444444444")
+#print(fx_model.backbone.layer2)
+print(fx_model.backbone.layer2.0)
 optimizer = optim.SGD(fx_model.parameters(),lr=0.01,momentum=0.9,weight_decay=0.00005)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 criterion = nn.CrossEntropyLoss()
@@ -180,7 +184,9 @@ for epoch in range(num_epochs):
         rgb_img = c_imgs 
             
         fx_model.eval()
-        target_layers = [fx_model.module.layer2[-1],fx_model.module.layer3[-1],fx_model.module.layer2[-1],fx_model.module.layer1[-1]]
+        target_layers = [fx_model.backbone.layer2[-1],fx_model.backbone.layer1[-1],fx_model.backbone.layer3[-1]]
+        #target_layers = [fx_model.backbone.module.layer2[-1],fx_model.backbone.module.layer2[-1],fx_model.backbone.module.layer3[-1]]
+        #target_layers = [fx_model.module.layer2[-1],fx_model.module.layer3[-1],fx_model.module.layer2[-1],fx_model.module.layer1[-1]]
         input_img = input_img.to("cuda")
         '''
         if cam_mode == "eigen":
