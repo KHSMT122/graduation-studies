@@ -39,6 +39,7 @@ from pytorch_grad_cam import GradCAM,EigenCAM
 
 model = models.resnet50(pretrained = True)
 names = torchvision.models.feature_extraction.get_graph_node_names(model)
+'''
 print(names)
 
 
@@ -57,6 +58,7 @@ def print_model(module, name="model", depth=0):
 
 
 print_model(model)
+'''
 class Network(nn.Module):
     def __init__(self):
         super().__init__()
@@ -99,37 +101,66 @@ transform = transforms.Compose([
         ])       
 
 trainset = torchvision.datasets.CIFAR10(
-    root='./data', train=True, download=True, transform=transform)
+    root='./data', 
+    train=True, 
+    download=True, 
+    transform=transform,
+)
 trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=train_batch, shuffle=True, num_workers=2,pin_memory=True)
+    trainset,
+    batch_size=train_batch,
+    shuffle=True,
+    num_workers=2,
+    pin_memory=True
+    )
 
 val_set = torchvision.datasets.CIFAR10(
-    root='./data', train=False, download=True, transform=transform)
+    root='./data',
+    train=False,
+    download=True,
+    transform=transform
+    )
 n_samples = len(trainset)
 val_size = int(len(trainset) * 0.8)
 test_size = n_samples - val_size
-testset, valset = torch.utils.data.random_split(trainset, [test_size, val_size])
+testset, valset = torch.utils.data.random_split(
+        trainset,
+        [test_size, val_size]
+        )
 
 val_load = torch.utils.data.DataLoader(
-    val_set, batch_size=val_batch, shuffle=False, num_workers=2,pin_memory=True)
+    val_set,
+    batch_size=val_batch,
+    shuffle=False,
+    num_workers=2,
+    pin_memory=True
+    )
 
 test_load = torch.utils.data.DataLoader(
-    testset, batch_size=val_batch, shuffle=False, num_workers=2,pin_memory=True)
+    testset,
+    batch_size=val_batch,
+    shuffle=False,
+    num_workers=2,
+    pin_memory=True
+    )
 
 names = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck")
 
 
-
-print('######################################')
 fx_model = models.resnet50(pretrained = True)
-print(fx_model)
-fx_model = Network()
+fx_model.fc = nn.Linear(2048,10)
+#print(fx_model)
+#fx_model = Network()
 fx_model = fx_model.to("cuda")
 
-print("44444444444444444444444444444444444444444444444444444444444444444")
 #print(fx_model.backbone.layer2)
-print(getattr(fx_model.backbone.layer2, '0'))
-optimizer = optim.SGD(fx_model.parameters(),lr=0.01,momentum=0.9,weight_decay=0.00005)
+#print(getattr(fx_model.backbone.layer2, '0'))
+optimizer = optim.SGD(
+        fx_model.parameters(),
+        lr=0.01,
+        momentum=0.9,
+        weight_decay=0.00005
+        )
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 criterion = nn.CrossEntropyLoss()
 
@@ -137,6 +168,8 @@ criterion = nn.CrossEntropyLoss()
 atk = PGD(fx_model,eps=4/255,alpha = 8/255,steps=2, random_start=False)
 atk = FGSM(fx_model,eps=2/255)
 atk.set_normalization_used(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
+
 
 
 num_epochs = 100
@@ -161,20 +194,26 @@ for epoch in range(num_epochs):
         c_imgs = imgs
         c_labels = labels
 
-        labels = labels.to(device)
+       
 
         norm = transforms.Compose([
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         imgs = norm(imgs)     #<torch.float32>
         imgs = imgs.to(device)
+        labels = labels.to(device)
+        
         optimizer.zero_grad()
-        outputs = fx_model(imgs,"normal")
+        outputs = fx_model(imgs)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
 
         fx_model.eval()
+
+        
+
+
 
         c_labels = c_labels.to(device)
         norm = transforms.Compose([
@@ -184,30 +223,44 @@ for epoch in range(num_epochs):
         rgb_img = c_imgs 
             
         fx_model.eval()
-        target_layers = [getattr(fx_model.backbone.layer1, '2'), getattr(fx_model.backbone.layer2, '2'), getattr(fx_model.backbone.layer4, '2')]
+        
+        #target_layers = [getattr(fx_model.backbone.layer1, '2'), getattr(fx_model.backbone.layer2, '3'), getattr(fx_model.backbone.layer4, '2'),getattr(fx_model.backbone.layer3, '5')]
+        
+        print("*"*80)
+        #print(target_layers)
         #target_layers = [fx_model.backbone.module.layer2[-1],fx_model.backbone.module.layer2[-1],fx_model.backbone.module.layer3[-1]]
-        #target_layers = [fx_model.module.layer2[-1],fx_model.module.layer3[-1],fx_model.module.layer2[-1],fx_model.module.layer1[-1]]
+        target_layers = [fx_model.layer3[-1],fx_model.layer4[-1],fx_model.layer2[-1],fx_model.layer1[-1]]
+        
+        #input_img = input_img[0].to("cuda")
         input_img = input_img.to("cuda")
+        #input_img = input_img.unsqueeze(0) 
+       
+        print(input_img.shape)
         '''
-        if cam_mode == "eigen":
-            with EigenCAM(model=model, target_layers=target_layers, use_cuda=torch.cuda.is_available()) as cam:
+
+
+        cam = GradCAM(
+            model=fx_model, target_layers=target_layers, use_cuda=torch.cuda.is_available()
+        )
+        cam.batch_size = 1
+        #input_img = input_img.squeeze(0)
+        print(input_img.shape)
+        grayscale_cam = cam(
+            input_tensor=input_img,
+            #targets=[ClassifierOutputTarget(label)],
+            targets=None
+        )
+        
+        
+        
+        '''
+        with GradCAM(model=fx_model, target_layers=target_layers, use_cuda=torch.cuda.is_available()) as cam:
                 cam.batch_size=train_batch
-                print("making datat")
                 grayscale_cam = cam(
                 #input_tensor=input_img.unsqueeze(0),
                 input_tensor = input_img,
                 #targets=[ClassifierOutputTarget(l.item()) for l in self.label],
-                targets=None)#(128, 32, 32)
-        '''
-        cam_mode = "grad_cam"
-        with GradCAM(model=fx_model, target_layers=target_layers, use_cuda=torch.cuda.is_available()) as cam:
-            cam.batch_size=128
-            grayscale_cam = cam(
-            #input_tensor=input_img.unsqueeze(0),
-            input_tensor = input_img,
-            #targets=[ClassifierOutputTarget(l.item()) for l in self.label],
-            targets=None)#(128, 32, 32)
-                                
+                targets=None)#(128, 32, 32)                        
         fx_model.train()
         rgb_img = torch.squeeze(rgb_img)
     
@@ -224,7 +277,7 @@ for epoch in range(num_epochs):
         #cam_imgs = cam_imgs.to('cpu').detach().numpy().copy()
         #ims(torchvision.utils.make_grid(cam_imgs),128)     
         optimizer.zero_grad()
-        c_outputs = fx_model(rgb_imgs,"g_normal")
+        c_outputs = fx_model(rgb_imgs)
         loss = criterion(c_outputs, c_labels)
             
         loss.backward()
